@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "optitrack",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "cameras::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-cameras-Debug-06aaa949eb59547fffe9.json",
+					"name" : "cameras",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "optitrack::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-optitrack-Debug-00a8acecfba896c27fe6.json",
+					"name" : "optitrack",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/aleal/OneDrive/Documenti/Uni/GRENOBLE/HIL/ensimag_postwimp-main/ensimag_postwimp-main/optitrack/cmake-build-debug",
+		"source" : "C:/Users/aleal/OneDrive/Documenti/Uni/GRENOBLE/HIL/ensimag_postwimp-main/ensimag_postwimp-main/optitrack"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}
