@@ -6,8 +6,11 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from evdev import InputDevice, ecodes
 import evdev
+import time
+import pandas as pd
+import pyautogui
 
-abs_path = r"/home/pantaleo18/Human-in-the-loop"
+abs_path = r"/home/alessio/HIL/WII/HIL_Project"
 
 def find_wiimote():
     devices = [InputDevice(fn) for fn in evdev.list_devices()]
@@ -50,10 +53,6 @@ class MyWindow(QWidget):
         self.wii_thread.wii_button_pressed.connect(self.handle_wii_button)
         self.wii_thread.start()
 
-        # Inizializza il cronometro all'avvio dell'app
-        self.elapsed_timer = QElapsedTimer()
-        self.elapsed_timer.start()
-
         self.current_focus = "main_buttons"  # "main_buttons" o "sidebar"
 
         self.current_button_index = 0  # Indice per i pulsanti principali
@@ -72,6 +71,13 @@ class MyWindow(QWidget):
         v_layout = QVBoxLayout(self.sidebar)
 
         self.grid_layout = QGridLayout(self.buttons_widget)
+        self.msgbox_open=False
+        self.testStarted = False
+        self.start_time = 0
+        self.it=0
+        self.target_list = ['Netflix','Chili TV','HBOMax','home','Prime Video','profile','settings','Live TV','NBA TV', 'Rakuten TV', 'search', 'TF1','settings','home','Bein Sports']
+        self.DataFrame = pd.DataFrame(columns=['Time'])
+        self.DataFrame_list = []
 
         # Creating buttons
         num_rows = 4
@@ -182,86 +188,232 @@ class MyWindow(QWidget):
             self.handle_sidebar_buttons(direction)
 
     def handle_main_buttons(self, direction):
-        # Logica per i pulsanti principali
+        if not self.msgbox_open:
+            # Logica per i pulsanti principali
 
-        # Rimuovi il focus dal pulsante corrente
-        if self.current_button_index is not None:
-            self.buttons[self.current_button_index].clearFocus()
-            self.buttons[self.current_button_index].setStyleSheet("")
+            # Rimuovi il focus dal pulsante corrente
+            if self.current_button_index is not None:
+                self.buttons[self.current_button_index].clearFocus()
+                self.buttons[self.current_button_index].setStyleSheet("")
 
-        num_cols = 5
-        if direction == "UP" and self.current_button_index - num_cols >= 0:
-            self.current_button_index -= num_cols
-        elif direction == "DOWN" and self.current_button_index + num_cols < len(self.buttons):
-            self.current_button_index += num_cols
-        elif direction == "LEFT":
-            if self.current_button_index % num_cols == 0:
-                # Se il cursore è nella prima colonna
-                # Imposta il focus sulla barra laterale
-                self.buttons_sidebar[0].setFocus()
-                self.current_button_index = None
-                # Imposta lo sfondo blu sul bottone della sidebar
-                self.buttons_sidebar[0].setStyleSheet("background-color: blue;")
-                self.current_focus = "sidebar"
-                return
-            else:
-                self.current_button_index -= 1
-        elif direction == "RIGHT" and self.current_button_index + 1 < len(self.buttons):
-            self.current_button_index += 1
+            num_cols = 5
+            if direction == "UP" and self.current_button_index - num_cols >= 0:
+                self.current_button_index -= num_cols
+            elif direction == "DOWN" and self.current_button_index + num_cols < len(self.buttons):
+                self.current_button_index += num_cols
+            elif direction == "LEFT":
+                if self.current_button_index % num_cols == 0:
+                    # Se il cursore è nella prima colonna
+                    # Imposta il focus sulla barra laterale
+                    self.buttons_sidebar[0].setFocus()
+                    self.current_button_index = None
+                    # Imposta lo sfondo blu sul bottone della sidebar
+                    self.buttons_sidebar[0].setStyleSheet("background-color: blue;")
+                    self.current_focus = "sidebar"
+                    return
+                else:
+                    self.current_button_index -= 1
+            elif direction == "RIGHT" and self.current_button_index + 1 < len(self.buttons):
+                self.current_button_index += 1
 
-        # Imposta il focus sul nuovo pulsante corrente
-        self.buttons[self.current_button_index].setFocus()
-        self.buttons[self.current_button_index].setStyleSheet("background-color: blue;")
+            # Imposta il focus sul nuovo pulsante corrente
+            self.buttons[self.current_button_index].setFocus()
+            self.buttons[self.current_button_index].setStyleSheet("background-color: blue;")
 
         # Mostra il tempo trascorso dall'ultima interazione quando viene premuto A
         if direction == "A":
-            elapsed_time = self.elapsed_timer.elapsed() / 1000
-            QMessageBox.critical(None, "Interazione",
-                                f"You selected {self.buttons[self.current_button_index].objectName()} in {elapsed_time:.2f} s.",
-                                QMessageBox.Retry | QMessageBox.Cancel)
-            # Azzera il cronometro
-            self.elapsed_timer.restart()
-
-    def handle_sidebar_buttons(self, direction):
-        # Logica per i pulsanti della barra laterale
-
-        # Rimuovi il focus dal pulsante corrente
-        if self.sidebar_button_index is not None:
-            self.buttons_sidebar[self.sidebar_button_index].clearFocus()
-            self.buttons_sidebar[self.sidebar_button_index].setStyleSheet("")
-        
-        # Numero di pulsanti nella barra laterale
-        num_sidebar_buttons = len(self.buttons_sidebar)
-
-        if direction == "UP":
-            if self.sidebar_button_index >0:
-                self.sidebar_button_index = (self.sidebar_button_index - 1) % num_sidebar_buttons
+            button_name = self.buttons[self.current_button_index].objectName()
+            if not self.testStarted:
+                if self.msgbox_open:
+                    pyautogui.press('enter')
+                    self.msgbox_open = False
+                else:
+                    box_timer = QTimer(self)
+                    box_timer.setSingleShot(True)
+                    message_box = QMessageBox()
+                    message_box.setStandardButtons(message_box.Ok)
+                    message_box.setIcon(message_box.Information)
+                    message_box.setTextFormat(Qt.RichText)
+                    message_box.setWindowTitle("Target Acquired!")
+                    message_box.setText(f"<font size=24>You opened {button_name}")
+                    message_box.show()
+                    self.msgbox_open = True
+                    box_timer.timeout.connect(lambda : message_box.close())
+                    box_timer.start(10000)
             else:
-                self.sidebar_button_index = num_sidebar_buttons - 1
+                if self.msgbox_open:
+                    pyautogui.press(['tab','enter'])
+                    self.msgbox_open = False
+                else:
+                    print(button_name)
+                    print(self.target_list[self.it])
+                    if button_name == self.target_list[self.it]:
+                        print('target acquired')
+                        end_time = time.time() - self.start_time
+                        self.DataFrame_list.append({'Time':end_time})
+                        self.it+=1
+                        if self.it == len(self.target_list):
+                            box_timer = QTimer(self)
+                            box_timer.setSingleShot(True)
+                            self.testStarted = False
+                            message_box = QMessageBox()
+                            message_box.setStandardButtons(message_box.Ok)
+                            message_box.setIcon(message_box.Information)
+                            message_box.setTextFormat(Qt.RichText)
+                            message_box.setWindowTitle("Target Acquired!")
+                            message_box.setText(f"<font size=24>This is the end of the test.<br> Thank you for your partecipation!</font>")
+                            message_box.show()
+                            self.msgbox_open = True
 
-        elif direction == "DOWN":
-            self.sidebar_button_index = (self.sidebar_button_index + 1) % num_sidebar_buttons
-        elif direction == "RIGHT":
-            # Torna ai pulsanti principali
-            self.current_focus = "main_buttons"
-            self.buttons[0].setFocus()
-            self.buttons[0].setStyleSheet("background-color: blue;")
-            self.current_button_index = 0
-            return
-        
-        # Imposta il focus sul nuovo pulsante corrente
-        self.buttons_sidebar[self.sidebar_button_index].setFocus()
-        self.buttons_sidebar[self.sidebar_button_index].setStyleSheet("background-color: blue;")
+                            for btn in self.buttons_sidebar:
+                                btn.setEnabled(False)
+                            for btn in self.buttons:
+                                btn.setEnabled(False)
+
+                            print(self.DataFrame_list)
+                            self.DataFrame = pd.concat([self.DataFrame, pd.DataFrame(self.DataFrame_list)], ignore_index=True)
+                            self.DataFrame.to_excel("Results.xlsx")
+                            box_timer.timeout.connect(lambda : message_box.close())
+                            box_timer.start(10000)
+                        else:
+                            box_timer = QTimer(self)
+                            box_timer.setSingleShot(True)
+                            print('next_target')
+                            message_box = QMessageBox()
+                            message_box.setTextFormat(Qt.RichText)
+                            message_box.setStandardButtons(message_box.Ok)
+                            message_box.setIcon(message_box.Information)
+                            message_box.setWindowTitle("Target Acquired!")
+                            message_box.setText(f"<font size=24>You opened {button_name}. <br> Your next target is {self.target_list[self.it]}<br> Press OK to start</font>")
+                            message_box.buttonClicked.connect(lambda:setattr(self, 'start_pos', QCursor.pos()))
+                            message_box.buttonClicked.connect(lambda:setattr(self, 'start_time',time.time()))
+                            message_box.show()
+                            self.msgbox_open = True
+                            box_timer.timeout.connect(lambda : message_box.close())
+                            box_timer.start(10000)
+                    else:
+                        print('problemmmmmm')
             
+
+            
+    def handle_sidebar_buttons(self, direction):
+        if not self.msgbox_open:
+            # Logica per i pulsanti della barra laterale
+
+            # Rimuovi il focus dal pulsante corrente
+            if self.sidebar_button_index is not None:
+                self.buttons_sidebar[self.sidebar_button_index].clearFocus()
+                self.buttons_sidebar[self.sidebar_button_index].setStyleSheet("")
+            
+            # Numero di pulsanti nella barra laterale
+            num_sidebar_buttons = len(self.buttons_sidebar)
+
+            if direction == "UP":
+                if self.sidebar_button_index >0:
+                    self.sidebar_button_index = (self.sidebar_button_index - 1) % num_sidebar_buttons
+                else:
+                    self.sidebar_button_index = num_sidebar_buttons - 1
+
+            elif direction == "DOWN":
+                self.sidebar_button_index = (self.sidebar_button_index + 1) % num_sidebar_buttons
+            elif direction == "RIGHT":
+                # Torna ai pulsanti principali
+                self.current_focus = "main_buttons"
+                self.buttons[0].setFocus()
+                self.buttons[0].setStyleSheet("background-color: blue;")
+                self.current_button_index = 0
+                return
+            
+            # Imposta il focus sul nuovo pulsante corrente
+            self.buttons_sidebar[self.sidebar_button_index].setFocus()
+            self.buttons_sidebar[self.sidebar_button_index].setStyleSheet("background-color: blue;")
+                
 
         # Mostra il tempo trascorso dall'ultima interazione quando viene premuto A sulla barra laterale
         if direction == "A":
-            elapsed_time = self.elapsed_timer.elapsed() / 1000
-            QMessageBox.critical(None, "Interazione",
-                                f"You selected {self.buttons_sidebar[self.sidebar_button_index].objectName()} in {elapsed_time:.2f} s.",
-                                QMessageBox.Retry | QMessageBox.Cancel)
-            # Azzera il cronometro
-            self.elapsed_timer.restart()
+
+            button_name = self.buttons_sidebar[self.sidebar_button_index].objectName()
+            if not self.testStarted:
+                if self.msgbox_open:
+                    pyautogui.press('enter')
+                    self.msgbox_open = False
+                else:
+                    box_timer = QTimer(self)
+                    box_timer.setSingleShot(True)
+                    message_box = QMessageBox()
+                    message_box.setStandardButtons(message_box.Ok)
+                    message_box.setIcon(message_box.Information)
+                    message_box.setTextFormat(Qt.RichText)
+                    message_box.setWindowTitle("Target Acquired!")
+                    message_box.setText(f"<font size=24>You opened {button_name}")
+                    message_box.show()
+                    self.msgbox_open = True
+                    box_timer.timeout.connect(lambda : message_box.close())
+                    box_timer.start(10000)
+            else:
+                if self.msgbox_open:
+                    pyautogui.press('enter')
+                    self.msgbox_open = False
+                else:
+                    print(button_name)
+                    print(self.target_list[self.it])
+                    if button_name == self.target_list[self.it]:
+                        print('target acquired')
+                        end_time = time.time() - self.start_time
+                        self.DataFrame_list.append({'Time':end_time})
+                        self.it+=1
+                        if self.it == len(self.target_list):
+                            box_timer = QTimer(self)
+                            box_timer.setSingleShot(True)
+                            self.testStarted = False
+                            message_box = QMessageBox()
+                            message_box.setStandardButtons(message_box.Ok)
+                            message_box.setIcon(message_box.Information)
+                            message_box.setTextFormat(Qt.RichText)
+                            message_box.setWindowTitle("Target Acquired!")
+                            message_box.setText(f"<font size=24>This is the end of the test.<br> Thank you for your partecipation!</font>")
+                            message_box.show()
+                            print(self.DataFrame_list)
+                            self.DataFrame = pd.concat([self.DataFrame, pd.DataFrame(self.DataFrame_list)], ignore_index=True)
+                            self.DataFrame.to_excel("Results.xlsx")
+                            box_timer.timeout.connect(lambda : message_box.close())
+                            box_timer.start(10000)
+                        else:
+                            box_timer = QTimer(self)
+                            box_timer.setSingleShot(True)
+                            print('next_target')
+                            message_box = QMessageBox()
+                            message_box.setTextFormat(Qt.RichText)
+                            message_box.setStandardButtons(message_box.Ok)
+                            message_box.setIcon(message_box.Information)
+                            message_box.setWindowTitle("Target Acquired!")
+                            message_box.setText(f"<font size=24>You opened {button_name}. <br> Your next target is {self.target_list[self.it]}<br> Press OK to start</font>")
+                            message_box.buttonClicked.connect(lambda:setattr(self, 'start_pos', QCursor.pos()))
+                            message_box.buttonClicked.connect(lambda:setattr(self, 'start_time',time.time()))
+                            message_box.show()
+                            self.msgbox_open = True
+                            box_timer.timeout.connect(lambda : message_box.close())
+                            box_timer.start(10000)
+                    else:
+                        print('problemmmmmm')
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_A:
+            self.testStarted=True
+            box_timer = QTimer(self)
+            box_timer.setSingleShot(True)
+            message_box = QMessageBox()
+            message_box.setStandardButtons(message_box.Ok)
+            message_box.setIcon(message_box.Information)
+            message_box.setTextFormat(Qt.RichText)
+            message_box.setWindowTitle("Start of the Test")
+            message_box.setText(f"<font size=24>Click on Netflix Icon. <br>Press OK to start</font>")
+            message_box.buttonClicked.connect(lambda:setattr(self, 'start_time',time.time()))
+            message_box.buttonClicked.connect(lambda:print('Click OK!'))
+            message_box.show()
+            self.msgbox_open=True
+            box_timer.timeout.connect(lambda : message_box.close())
+            box_timer.start(15000)
 
 
 
