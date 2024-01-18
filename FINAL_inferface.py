@@ -5,6 +5,7 @@ import os
 import pyautogui
 import pandas as pd
 import time
+from calibration_ckeck import calibrate
 
 abs_path = r"C:/Users/aleal/OneDrive/Documenti/Uni/GRENOBLE/HIL/ensimag_postwimp-main/ensimag_postwimp-main/optitrack"
 dll_path = abs_path + r"\optitrack_sc.dll"
@@ -19,18 +20,19 @@ from PyQt5.QtCore import *
 import ctypes
 from PyQt5.QtTest import QTest
 
-x_min = -0.27
-x_max = 0.1
-y_max = 0.35
-y_min = 0.55
+# x_min = -0.27
+# x_max = 0.1
+# y_max = 0.35
+# y_min = 0.55
 
 class MyWindow(QWidget):
 
     show_notification_signal = pyqtSignal(str)
     
-    def __init__(self):
-
+    def __init__(self, x_min, y_min, x_max, y_max):
+        
         super().__init__()
+        self.x_min, self.y_min, self.x_max, self.y_max = x_min, y_min, x_max, y_max
         start_connection.argtypes = [ctypes.c_char_p]
         ip_address =b"169.254.210.95"
         start_connection(ip_address)
@@ -40,7 +42,7 @@ class MyWindow(QWidget):
         self.start_pos = 0
         self.start_time = 0
         self.it=0
-        self.target_list = ['Netflix','Chili_TV','HBOMax','home','Netflix','profile','settings','Live_TV']
+        self.target_list = ['Netflix','Chili TV','HBOMax','home','Prime Video','profile','settings','Live TV','NBA TV', 'Rakuten TV', 'search', 'TF1','settings','home','Bein Sports','Apple Music','Juventus TV','Eurosport','Fox Sport', 'search', 'SKY','Youtube','RAI Play','Eurosport','Disney+','Chili TV','DAZN','profile','Fox Sport','Netflix']
         self.DataFrame = pd.DataFrame(columns=['Start position','End postion', 'Time'])
         self.DataFrame_list = []
         pyautogui.FAILSAFE = False
@@ -58,8 +60,12 @@ class MyWindow(QWidget):
         grid_layout = QGridLayout(self.buttons_widget)
 
         # Creating buttons
+        num_rows = 4
+        num_cols = 5
+        num_buttons = num_rows * num_cols
+        self.buttons = [QPushButton() for _ in range(num_buttons)]
         self.buttons_sidebar = [QPushButton() for j in range(4)]
-        self.buttons = [QPushButton() for i in range(6)]
+        
         
 
         main_images_path = abs_path + r"\images\main"
@@ -115,22 +121,22 @@ class MyWindow(QWidget):
             button.setIcon(icon)
 
             # Setting icon size
-            icon_size = QSize(button.size().width() // 2, button.size().height() // 2)
+            icon_size = QSize(button.size().width() // 3, button.size().height() // 3)
             button.setIconSize(icon_size)
             image_files.remove(random_image)
 
 
             # Button's size
             button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-            button.setMinimumSize(int(QDesktopWidget().screenGeometry().width()/3)-int(QDesktopWidget().screenGeometry().width()/45), int(QDesktopWidget().screenGeometry().height()/2))
+            button.setMinimumSize(int(QDesktopWidget().screenGeometry().width()/num_cols)-50, int(QDesktopWidget().screenGeometry().height()/num_rows)-150)
 
             # Button's action
             button.clicked.connect(self.button_clicked)
             
 
             # Button's position
-            row = i // 3
-            col = i % 3
+            row = i // num_cols
+            col = i % num_cols
 
             # Adding button to the grid
             grid_layout.addWidget(button, row, col)
@@ -159,8 +165,8 @@ class MyWindow(QWidget):
         x, y, click = points
     
         cursor = QCursor()
-        x_screen = ( (x - x_min) * self.range_x ) / ( x_max - x_min)
-        y_screen = ( (y - y_min) * self.range_y ) / (y_max - y_min)
+        x_screen = ( (x - self.x_min) * self.range_x ) / ( self.x_max - self.x_min)
+        y_screen = ( (y - self.y_min) * self.range_y ) / (self.y_max - self.y_min)
         cursor.setPos(int(x_screen), int(y_screen))
 
 
@@ -248,5 +254,5 @@ class MyWindow(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = MyWindow()
+    window = MyWindow(*calibrate())
     sys.exit(app.exec_())
