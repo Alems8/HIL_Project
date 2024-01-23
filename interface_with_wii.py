@@ -75,7 +75,7 @@ class MyWindow(QWidget):
         self.testStarted = False
         self.start_time = 0
         self.it=0
-        self.target_list = ['Netflix','Chili TV','HBOMax','home','Prime Video','profile','settings','Live TV','NBA TV', 'Rakuten TV', 'search', 'TF1','settings','home','Bein Sports']
+        self.target_list = ['Netflix','Chili TV','HBOMax','home','Prime Video','profile','settings','Live TV','NBA TV', 'Rakuten TV', 'search', 'TF1','settings','home','Bein Sports','Apple Music','Juventus TV','Eurosport','Fox Sport', 'search', 'SKY','Youtube','RAI Play','Eurosport','Disney+','Chili TV','DAZN','profile','Fox Sport','Netflix']
         self.DataFrame = pd.DataFrame(columns=['Time'])
         self.DataFrame_list = []
 
